@@ -201,13 +201,18 @@
   timer ticks
   )
 
+(defun edictc-server--connect (nick)
+  "Connect to DICT server."
+  (interactive)
+  (let* ((ep (apply 'edictc-process-from-server (cons :server-nick (assoc nick edictc-servers)))))
+    (edictc-open-network-stream ep 'explore)))
+
 (defun edictc-server-connect (&optional button)
   "Connect to DICT server."
   (interactive)
   (let* ((nick (if (derived-mode-p 'edictc-servers-menu-mode) (tabulated-list-get-id)
-		 (button-get 'edictc-server button)))
-	 (ep (apply 'edictc-process-from-server (cons :server-nick (assoc nick edictc-servers)))))
-    (edictc-open-network-stream ep 'explore)))
+		 (button-get 'edictc-server button))))
+    (edictc-server-connect nick)))
 
 (defun edictc-show-database ()
   (interactive)
