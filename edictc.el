@@ -1,4 +1,4 @@
-;;; edictc.el --- DICT client for Emacs (Work In Progress)
+;;; edictc.el --- DICT client for Emacs (Work In Progress) -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016 Jambunathan K <kjambunathan at gmail dot com>
 
@@ -152,8 +152,7 @@
 			   (state 'DEAD)
 			   (display-buffer (generate-new-buffer "edictc-display"))
 			   (log-buffer (generate-new-buffer "edictc-log"))
-			   (output-buffer (generate-new-buffer "edictc-output"))
-			   remarks))
+			   (output-buffer (generate-new-buffer "edictc-output"))))
 
 	    (:constructor edictc-process-from-edictc-process
 			  (&key edictc-process
@@ -413,8 +412,7 @@
 							  (group-n 2 (zero-or-more any))
 							  "\r" "\n"))
 				      nil 'move)
-	       (let* ((response-text (buffer-substring (point-min) (match-beginning 0)))
-		      (status (match-string 1))
+	       (let* ((status (match-string 1))
 		      (status-text (match-string 2))
 		      (status-code (string-to-number status)))
 		 (delete-region (point-min) (point))
@@ -507,8 +505,7 @@
     (let* ((request (car (edictc-process-request-qhead ep)))
 	   (command (edictc-request-command request))
 	   (callback (edictc-request-callback request))
-	   (pending-requests (cdr (edictc-process-request-qhead ep)))
-	   (response (edictc-process-response ep)))
+	   (pending-requests (cdr (edictc-process-request-qhead ep))))
 
       ;; Remove the just completed request
       (setf (edictc-process-request-qhead ep) pending-requests)
@@ -710,7 +707,7 @@
 
 ;;;; DEFAULT
 
-(defun edictc-display-response (ep command)
+(defun edictc-display-response (ep _command)
   (let* ((display-buffer (edictc-process-display-buffer ep)))
     (with-current-buffer display-buffer
       (let ((inhibit-read-only t))
@@ -756,7 +753,7 @@
   (hl-line-mode 1)
   )
 
-(defun edictc-list-server-databases (ep command)
+(defun edictc-list-server-databases (ep _command)
   "Examine how a text is rendered in all available font families.
 Use `edictc-server-databases-menu-set-text' to change the sample text.  Use
 `edictc-server-databases-menu-set-script' to change the script.  Use
@@ -796,8 +793,7 @@ the current line."
 ;;;; SHOW STRATEGIES
 
 (defvar edictc-server-strategies-menu-mode-map
-  (let ((map (make-sparse-keymap))
-        (menu-map (make-sparse-keymap "DICT Servers Menu")))
+  (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "\C-m" 'edictc-set-as-default-strategy)
     (define-key map "\C-x\C-s" 'edictc-save-configuration)
@@ -827,7 +823,7 @@ the current line."
   (edictc-minor-mode)
   (hl-line-mode 1))
 
-(defun edictc-list-server-strategies (ep command)
+(defun edictc-list-server-strategies (ep _command)
   "Examine how a text is rendered in all available font families.
 Use `edictc-server-strategies-menu-set-text' to change the sample text.  Use
 `edictc-server-strategies-menu-set-script' to change the script.  Use
@@ -934,8 +930,7 @@ the current line."
 	(customize-save-variable 'edictc-servers edictc-servers))))))
 
 (defvar edictc-servers-menu-mode-map
-  (let ((map (make-sparse-keymap))
-        (menu-map (make-sparse-keymap "DICT Servers Menu")))
+  (let ((map (make-sparse-keymap)))
     (set-keymap-parent map tabulated-list-mode-map)
     (define-key map "\C-m" 'edictc-set-as-default-server)
     (define-key map "\C-x\C-s" 'edictc-save-configuration)
@@ -1131,7 +1126,7 @@ the current line."
   (hl-line-mode 1)
   )
 
-(defun edictc-list-server-matches (ep command)
+(defun edictc-list-server-matches (ep _command)
   "Examine how a text is rendered in all available font families.
 Use `edictc-server-matches-menu-set-text' to change the sample text.  Use
 `edictc-server-matches-menu-set-script' to change the script.  Use
