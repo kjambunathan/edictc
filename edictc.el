@@ -152,7 +152,8 @@
 			   (state 'DEAD)
 			   (display-buffer (generate-new-buffer "edictc-display"))
 			   (log-buffer (generate-new-buffer "edictc-log"))
-			   (output-buffer (generate-new-buffer "edictc-output"))))
+			   (output-buffer (generate-new-buffer "edictc-output"))
+			   remarks))
 
 	    (:constructor edictc-process-from-edictc-process
 			  (&key edictc-process
