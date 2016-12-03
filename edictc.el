@@ -98,6 +98,11 @@
 		 (string :tag "Nickname"))
   :group 'edictc)
 
+(defcustom edictc-debug nil
+  "Enable debugging."
+  :type 'boolean
+  :group 'edictc)
+
 (defgroup edictc-faces nil
   "Faces for hi-lock."
   :group 'edictc
@@ -152,8 +157,7 @@
 			   (state 'DEAD)
 			   (display-buffer (generate-new-buffer "edictc-display"))
 			   (log-buffer (generate-new-buffer "edictc-log"))
-			   (output-buffer (generate-new-buffer "edictc-output"))
-			   remarks))
+			   (output-buffer (generate-new-buffer "edictc-output"))))
 
 	    (:constructor edictc-process-from-edictc-process
 			  (&key edictc-process
@@ -196,6 +200,7 @@
   request-qhead request-qtail
 
   ;;; Response
+  status-code
   response
 
   ;;; Timer and Timeouts
@@ -205,7 +210,9 @@
 (defun edictc-server--connect (nick)
   "Connect to DICT server."
   (interactive)
-  (let* ((ep (apply 'edictc-process-from-server (cons :server-nick (assoc nick edictc-servers)))))
+  (let* ((ep (apply 'edictc-process-from-server
+		    (nconc (list :allow-other-keys t)
+			   (cons :server-nick (assoc nick edictc-servers))))))
     (edictc-open-network-stream ep 'explore)))
 
 (defun edictc-server-connect (&optional button)
@@ -232,8 +239,7 @@
     (case (process-status process)
       (open (ignore))
       ((failed closed)
-       (let* ((display-buffer (edictc-process-display-buffer ep))
-	      (output-buffer (edictc-process-output-buffer ep))
+       (let* ((output-buffer (edictc-process-output-buffer ep))
 	      (log-buffer (edictc-process-log-buffer ep)))
 
 	 (setf (edictc-process-process ep) nil)
@@ -242,8 +248,9 @@
 	 (kill-buffer output-buffer)
 	 (setf (edictc-process-output-buffer ep) nil)
 
-	 ;; (kill-buffer log-buffer)
-	 ;; (setf (edictc-process-log-buffer ep) nil)
+	 (unless edictc-debug
+	   (kill-buffer log-buffer)
+	   (setf (edictc-process-log-buffer ep) nil))
 
 	 (cancel-timer (edictc-process-timer ep))
 	 (setf  (edictc-process-timer ep) nil)
@@ -345,7 +352,7 @@
 
 ;;;; RECEIVE side
 
-(defun edictc-process-status-code (code)
+(defun edictc-summarize-status-code (code)
   (let ((status-alist '((1 . positive-preliminary)
 			(2 . positive-completion)
 			(3 . positive-intermediate)
@@ -436,11 +443,12 @@
 		  ((= status-code 110)
 		   ))
 		 (cond
-		  ((memq (edictc-process-status-code status-code)
+		  ((memq (edictc-summarize-status-code status-code)
 			 '(positive-completion permanent-negative))
 
 		   (setf (edictc-process-response ep) (nreverse (edictc-process-response ep)))
-		   (edictc-command-done ep status-code))
+		   (setf (edictc-process-status-code ep) status-code)
+		   (edictc-command-done ep))
 
 		  ((member status-code edictc-status-code-with-follow-text)
 		   (edictc-set-process-state ep 'WAITING-FOR-TEXT))))))
@@ -505,7 +513,7 @@
 
 ;;; Handle DICT Response
 
-(defun edictc-command-done (ep status-code)
+(defun edictc-command-done (ep)
   ;; (edictc-process-log ep "DONE" "%d" status-code)
   (unless (eq (edictc-process-state ep) 'INIT)
     (let* ((request (car (edictc-process-request-qhead ep)))
@@ -587,6 +595,7 @@
       (funcall callback ep command)
 
       ;; Clear out the response.
+      (setf (edictc-process-status-code ep) nil)
       (setf (edictc-process-response ep) nil)))
 
   (edictc-set-process-state ep 'IDLE)
