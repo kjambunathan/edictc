@@ -212,7 +212,7 @@
   (interactive)
   (let* ((nick (if (derived-mode-p 'edictc-servers-menu-mode) (tabulated-list-get-id)
 		 (button-get 'edictc-server button))))
-    (edictc-server-connect nick)))
+    (edictc-server--connect nick)))
 
 (defun edictc-show-database ()
   (interactive)
