@@ -269,10 +269,14 @@
 ;;;; Debugging
 
 (defun edictc-process-log (ep tag fmt &rest args)
-  (with-current-buffer (edictc-process-log-buffer ep)
-    (goto-char (point-max))
-    (insert (format "\n[%s] %s %s" (format-time-string "%H:%M:%S:%3N")
-		    tag (apply 'format fmt args)))))
+  (when edictc-debug
+    (let* ((log-buffer (edictc-process-log-buffer ep))
+	   (log-buffer (if (buffer-live-p log-buffer) log-buffer
+			 (setf (edictc-process-log-buffer ep) (generate-new-buffer "edictc-log")))))
+      (with-current-buffer log-buffer
+	(goto-char (point-max))
+	(insert (format "\n[%s] %s %s" (format-time-string "%H:%M:%S:%3N")
+			tag (apply 'format fmt args)))))))
 
 ;;;; SEND side
 
