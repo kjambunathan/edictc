@@ -982,7 +982,7 @@ the current line."
     ["Define word" edictc-command-define-or-match]
     ["Match word" edictc-command-match]
     "--"
-    ["Show DICT Servers" edictc-list-servers]
+    ["Explore DICT Servers" edictc-list-servers]
     ["Set this Server as default" edictc-set-as-default-server
      :visible (derived-mode-p 'edictc-servers-menu-mode)
      ]
