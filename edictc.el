@@ -843,15 +843,16 @@ the current line."
 	      (let* ((handle (edictc-database-handle db))
 		     (description (edictc-database-description db)))
 		(list handle (vector
-			      (cons handle
-				    `(database ,handle
-					       action
-					       (lambda (button)
-						 (let* ((database (button-get button 'database))
-							(ep (edictc-infer-edictc-process)))
-						   (message "%s" (current-buffer))
-						   (edictc-command--send ep 'SHOW 'INFO database
-									 'edictc-display-response)))))
+			      (if (member handle '("*" "!")) handle
+				(cons handle
+				      `(database ,handle
+						 action
+						 (lambda (button)
+						   (let* ((database (button-get button 'database))
+							  (ep (edictc-infer-edictc-process)))
+						     (message "%s" (current-buffer))
+						     (edictc-command--send ep 'SHOW 'INFO database
+									   'edictc-display-response))))))
 			      description))))
 	    (edictc-process-databases edictc-cookie))
 	   (edictc-process-database edictc-cookie)))))
