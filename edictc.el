@@ -183,6 +183,9 @@
   ;;; Buffers that are visible to the user.
   display-buffer
 
+  ;;; Buffers that are set up by  the user.
+  owner-buffer
+
   ;; Fields set up based on user configuration.
   server-nick hostname port
   database strategy
@@ -222,6 +225,22 @@
 		 (button-get 'edictc-server button))))
     (edictc-server--connect nick)))
 
+(defun edictc-server-connect-and-bind (nick)
+  "Connect to DICT server."
+  (interactive)
+
+  (if (and (local-variable-p 'edictc-cookie)
+	   (process-live-p (edictc-process-process edictc-cookie)))
+      (user-error "A DICT server is already running, please abort it")
+    (let* ((ep (apply 'edictc-process-from-server
+		      (nconc (list :allow-other-keys t)
+			     (cons :server-nick (assoc nick edictc-servers))))))
+      (edictc-open-network-stream ep 'explore)
+      (setf (edictc-process-owner-buffer ep) (current-buffer))
+
+      ;; (edictc-minor-mode 1)
+      (setq-local edictc-cookie ep))))
+
 (defun edictc-show-database ()
   (interactive)
   (when (derived-mode-p 'edictc-server-databases-menu-mode)
@@ -245,10 +264,10 @@
 	 (setf (edictc-process-process ep) nil)
 	 (process-put process :edictc-process nil)
 
-	 (kill-buffer output-buffer)
-	 (setf (edictc-process-output-buffer ep) nil)
-
 	 (unless edictc-debug
+	   (kill-buffer output-buffer)
+	   (setf (edictc-process-output-buffer ep) nil)
+
 	   (kill-buffer log-buffer)
 	   (setf (edictc-process-log-buffer ep) nil))
 
@@ -258,9 +277,10 @@
 	 (setf (edictc-process-state ep) 'DEAD)
 
 	 (when (eq ep (default-value 'edictc-cookie))
-	   (set-default 'edictc-cookie nil)))
+	   (set-default 'edictc-cookie nil))
 
-       )
+	 ;; Do this only if the user interactively stopped the server
+	 (kill-local-variable 'edictc-cookie)))
       (otherwise
        (user-error "Edictc process status \"%s\" not handled" (process-status process))))))
 
@@ -433,7 +453,7 @@
 		      (status-text (match-string 2))
 		      (status-code (string-to-number status)))
 		 (delete-region (point-min) (point))
-		 ;; (edictc-process-log ep "DEBUG" "%d: %s" status-code status-text)
+		 (edictc-process-log ep "RCV" "%d: %s" status-code status-text)
 
 		 (setf (edictc-process-response ep)
 		       (cons
@@ -465,6 +485,7 @@
 			(cons 'text response-text)
 			(edictc-process-response ep)))
 		 (delete-region (point-min) (point))
+		 (edictc-process-log ep "RCV" "%s" response-text)
 		 (edictc-set-process-state ep 'WAITING-FOR-STATUS))))))))))
 
 ;;;; Handle DICT Commands
@@ -594,7 +615,6 @@
 	(t
 	 (error "Response to Command \"(%s)\" not handled" (edictc-command-string command))
 	 ))
-
 
       (funcall callback ep command)
 
@@ -967,7 +987,24 @@ the current line."
      :visible (derived-mode-p 'edictc-servers-menu-mode)
      ]
     ["Explore this Server" edictc-server-connect
-     :visible (derived-mode-p 'edictc-servers-menu-mode)]))
+     :visible (derived-mode-p 'edictc-servers-menu-mode)]
+    "--"
+    ("Start DICT Server" :enable (null (local-variable-p 'edictc-cookie)))
+    ["Stop DICT Server" edictc-command-quit :visible edictc-cookie]))
+
+(defun edictc-servers-menu ()
+  (append
+   (list "Start DICT Server" :enable '(null (local-variable-p 'edictc-cookie)))
+   (mapcar (lambda (server)
+	     (let* ((nick (car server)))
+	       (vector nick
+		       `(lambda ()
+			  (interactive)
+			  (edictc-server-connect-and-bind ,nick))
+		       :visible (null (local-variable-p 'edictc-cookie)))))
+	   edictc-servers)))
+
+(easy-menu-add-item edictc-servers-mode-menu nil (edictc-servers-menu))
 
 (easy-menu-define edictc-minor-mode-menu-bar-map edictc-minor-mode-map
   "Menu for `edictc-menu-mode'."
@@ -1102,7 +1139,9 @@ the current line."
 	  ep)))))
    (t
 
-    (let* ((ep (apply 'edictc-process-from-server (cons :server-nick (assoc edictc-server edictc-servers)))))
+    (let* ((ep (apply 'edictc-process-from-server
+		      (nconc (list :allow-other-keys t)
+			     (cons :server-nick (assoc edictc-server edictc-servers))))))
       (edictc-open-network-stream ep)
       (setq edictc-cookie ep)))))
 
@@ -1178,6 +1217,13 @@ the current line."
 					   (edictc-command--send ep 'DEFINE database word
 								 'edictc-display-response)))))))))
 	   (edictc-process-response edictc-cookie)))))
+
+(add-hook 'menu-bar-update-hook 'edictc-update-menu)
+
+(defun edictc-update-menu ()
+  (easy-menu-add-item edictc-servers-mode-menu nil (edictc-servers-menu))
+  ;; (easy-menu-remove-item edictc-servers-mode-menu nil "Start DICT Server")
+)
 
 (provide 'edictc)
 
