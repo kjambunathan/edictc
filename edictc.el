@@ -121,25 +121,30 @@
 
 ;;;; DICT Protocol Related
 
-(defstruct (edictc-match (:constructor edictc-create-match)
+(defstruct (edictc-match (:type list) :named
+			 (:constructor edictc-create-match)
 			 (:copier nil))
   database word)
 
-(defstruct (edictc-database (:constructor edictc-create-database)
+(defstruct (edictc-database (:type list) :named
+			    (:constructor edictc-create-database)
 			    (:copier nil))
   handle description)
 
-(defstruct (edictc-strategy (:constructor edictc-create-strategy)
+(defstruct (edictc-strategy (:type list) :named
+			    (:constructor edictc-create-strategy)
 			    (:copier nil))
   handle description)
 
 ;;;; EDICTC Related
 
-(defstruct (edictc-request (:constructor edictc-create-request)
+(defstruct (edictc-request (:type list) :named
+			   (:constructor edictc-create-request)
 			   (:copier nil))
   process command callback)
 
 (defstruct (edictc-process
+	    (:type list) :named
 	    (:constructor nil)
 	    (:constructor edictc-process-from-server
 			  (&key
