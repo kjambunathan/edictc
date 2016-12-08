@@ -121,30 +121,30 @@
 
 ;;;; DICT Protocol Related
 
-(defstruct (edictc-match (:type list) :named
+(defstruct (edictc-match (:type list)
 			 (:constructor edictc-create-match)
 			 (:copier nil))
   database word)
 
-(defstruct (edictc-database (:type list) :named
+(defstruct (edictc-database (:type list)
 			    (:constructor edictc-create-database)
 			    (:copier nil))
   handle description)
 
-(defstruct (edictc-strategy (:type list) :named
+(defstruct (edictc-strategy (:type list)
 			    (:constructor edictc-create-strategy)
 			    (:copier nil))
   handle description)
 
 ;;;; EDICTC Related
 
-(defstruct (edictc-request (:type list) :named
+(defstruct (edictc-request (:type list)
 			   (:constructor edictc-create-request)
 			   (:copier nil))
   process command callback)
 
 (defstruct (edictc-process
-	    (:type list) :named
+	    (:type list)
 	    (:constructor nil)
 	    (:constructor edictc-process-from-server
 			  (&key
@@ -604,7 +604,16 @@
 					       line)
 			     (edictc-create-database :handle (match-string 1 line)
 						     :description (match-string 2 line))))
-			 lines))))
+			 lines))
+
+	   (unless (assoc "*" (edictc-process-databases ep))
+	     (push (edictc-create-database :handle "*" :description "Match all")
+		   (edictc-process-databases ep)))
+
+	   (unless (assoc "!" (edictc-process-databases ep))
+	     (push (edictc-create-database :handle "!" :description "Match any")
+		   (edictc-process-databases ep)))))
+	
 	(SHOWSTRATEGIES
 	 (let* ((text (assoc-default 'text (edictc-process-response ep)) )
 		(lines (split-string text "[\r\n]")))
@@ -616,7 +625,21 @@
 					       line)
 			     (edictc-create-strategy :handle (match-string 1 line)
 						     :description (match-string 2 line))))
-			 lines))))
+			 lines))
+
+	   (unless (assoc "prefix" (edictc-process-strategies ep))
+	     (push (edictc-create-strategy :handle "prefix" :description "Match Prefix")
+		   (edictc-process-strategies ep)))
+	   
+	   (unless (assoc "exact" (edictc-process-strategies ep))
+	     (push (edictc-create-strategy :handle "exact" :description "Match Exactly")
+		   (edictc-process-strategies ep)))
+
+	   (unless (assoc "." (edictc-process-strategies ep))
+	     (push (edictc-create-strategy :handle "." :description "Server decides the matches")
+		   (edictc-process-strategies ep)))
+
+	   ))
 	(t
 	 (error "Response to Command \"(%s)\" not handled" (edictc-command-string command))
 	 ))
@@ -829,7 +852,6 @@ the current line."
 						   (message "%s" (current-buffer))
 						   (edictc-command--send ep 'SHOW 'INFO database
 									 'edictc-display-response)))))
-			      handle
 			      description))))
 	    (edictc-process-databases edictc-cookie))
 	   (edictc-process-database edictc-cookie)))))
@@ -1131,6 +1153,13 @@ the current line."
 (define-button-type 'edictc-button-database-info
   :supertype 'help-xref
   'help-function (lambda nil (call-interactively 'edictc-command-show-info)))
+
+(define-button-type 'edictc-button-match-word
+  :supertype 'help-xref
+  'action (lambda (button)
+	    (let* ((ep (edictc-infer-edictc-process))
+		   (command (button-get button 'command)))
+	      (apply 'edictc-command-match ep command))))
 
 (defun edictc-infer-edictc-process ()
   (cond
