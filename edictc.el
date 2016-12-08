@@ -299,9 +299,12 @@
 	   (log-buffer (if (buffer-live-p log-buffer) log-buffer
 			 (setf (edictc-process-log-buffer ep) (generate-new-buffer "edictc-log")))))
       (with-current-buffer log-buffer
-	(goto-char (point-max))
-	(insert (format "\n[%s] %s %s" (format-time-string "%H:%M:%S:%3N")
-			tag (apply 'format fmt args)))))))
+	(let ((inhibit-read-only t))
+	  (save-excursion
+	    (goto-char (point-max))
+	    (insert (format "\n[%s] %s %s" (format-time-string "%H:%M:%S:%3N")
+			    tag (apply 'format fmt args)))))
+	(view-mode 1)))))
 
 ;;;; SEND side
 
@@ -613,7 +616,7 @@
 	   (unless (assoc "!" (edictc-process-databases ep))
 	     (push (edictc-create-database :handle "!" :description "Match any")
 		   (edictc-process-databases ep)))))
-	
+
 	(SHOWSTRATEGIES
 	 (let* ((text (assoc-default 'text (edictc-process-response ep)) )
 		(lines (split-string text "[\r\n]")))
@@ -630,7 +633,7 @@
 	   (unless (assoc "prefix" (edictc-process-strategies ep))
 	     (push (edictc-create-strategy :handle "prefix" :description "Match Prefix")
 		   (edictc-process-strategies ep)))
-	   
+
 	   (unless (assoc "exact" (edictc-process-strategies ep))
 	     (push (edictc-create-strategy :handle "exact" :description "Match Exactly")
 		   (edictc-process-strategies ep)))
@@ -780,7 +783,8 @@
       (let ((inhibit-read-only t))
 	(erase-buffer)
 	(insert (edictc-process-response ep)))
-      (outline-mode)
+      ;; (outline-mode)
+      (org-mode)
       (edictc-minor-mode 1)
       (read-only-mode 1)
       (define-key (current-local-map) (kbd "<backtab>") 'org-global-cycle)
