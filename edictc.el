@@ -216,7 +216,6 @@
   )
 
 (defun edictc-server--connect (nick)
-  "Connect to DICT server."
   (interactive)
   (let* ((ep (apply 'edictc-process-from-server
 		    (nconc (list :allow-other-keys t)
@@ -224,14 +223,12 @@
     (edictc-open-network-stream ep 'explore)))
 
 (defun edictc-server-connect (&optional button)
-  "Connect to DICT server."
   (interactive)
   (let* ((nick (if (derived-mode-p 'edictc-servers-menu-mode) (tabulated-list-get-id)
 		 (button-get 'edictc-server button))))
     (edictc-server--connect nick)))
 
 (defun edictc-server-connect-and-bind (nick)
-  "Connect to DICT server."
   (interactive)
 
   (if (and (local-variable-p 'edictc-cookie)
@@ -255,8 +252,6 @@
 ;;; Manage Process
 
 (defun edictc-process-sentinel (process sentinel)
-  "Called when PROCESS receives SENTINEL."
-
   (let* ((sentinel (string-trim sentinel))
 	 (ep (process-get process :edictc-process)))
     (message "Received sentinel:%s status: %s" sentinel (process-status process))
@@ -825,11 +820,6 @@
   )
 
 (defun edictc-list-server-databases (ep _command)
-  "Examine how a text is rendered in all available font families.
-Use `edictc-server-databases-menu-set-text' to change the sample text.  Use
-`edictc-server-databases-menu-set-script' to change the script.  Use
-`edictc-server-databases-menu-set-frame-font' to change the frame font to the font in
-the current line."
   (interactive)
   (let ((display-buffer (edictc-process-display-buffer ep)))
     (with-current-buffer display-buffer
@@ -837,7 +827,6 @@ the current line."
     (switch-to-buffer display-buffer)))
 
 (defun edictc-server-databases-menu--refresh ()
-  "Re-populate `tabulated-list-entries'."
   (let ()
     (assert edictc-cookie)
     (setq tabulated-list-entries
@@ -872,7 +861,6 @@ the current line."
   "Local keymap for `edictc-server-strategies-menu-mode' buffers.")
 
 (define-derived-mode edictc-server-strategies-menu-mode tabulated-list-mode "DICT Servers Menu"
-  "Display the string in `edictc-server-strategies-menu-text' in all available fonts."
   (setq tabulated-list-format
         `[("Strategy" 20 t)
           ("Description" 50 t)])
@@ -895,11 +883,6 @@ the current line."
   (hl-line-mode 1))
 
 (defun edictc-list-server-strategies (ep _command)
-  "Examine how a text is rendered in all available font families.
-Use `edictc-server-strategies-menu-set-text' to change the sample text.  Use
-`edictc-server-strategies-menu-set-script' to change the script.  Use
-`edictc-server-strategies-menu-set-frame-font' to change the frame font to the font in
-the current line."
   (interactive (list edictc-cookie))
   (let ((display-buffer (edictc-process-display-buffer ep)))
     (with-current-buffer display-buffer
@@ -907,7 +890,6 @@ the current line."
     (switch-to-buffer display-buffer)))
 
 (defun edictc-server-strategies-menu--refresh ()
-  "Re-populate `tabulated-list-entries'."
   (let ()
     (assert edictc-cookie)
     (setq tabulated-list-entries
@@ -925,7 +907,6 @@ the current line."
 ;;;; DICT Servers
 
 (defun edictc-set-as-default-server ()
-  "Connect to DICT server."
   (interactive)
   (when (derived-mode-p 'edictc-servers-menu-mode)
     (let* ((server-nick (tabulated-list-get-id)))
@@ -936,7 +917,6 @@ the current line."
 	  (edictc-minor-mode 1))))))
 
 (defun edictc-set-as-default-strategy ()
-  "Connect to DICT server."
   (interactive)
   (when (derived-mode-p 'edictc-server-strategies-menu-mode)
     (let* ((strategy (tabulated-list-get-id))
@@ -950,7 +930,6 @@ the current line."
 	  (edictc-minor-mode 1))))))
 
 (defun edictc-set-as-default-database ()
-  "Connect to DICT server."
   (interactive)
   (when (derived-mode-p 'edictc-server-databases-menu-mode)
     (let* ((database (tabulated-list-get-id))
@@ -1074,7 +1053,6 @@ the current line."
 (easy-menu-add-item (current-global-map) '("menu-bar" "tools") edictc-servers-mode-menu "spell")
 
 (define-derived-mode edictc-servers-menu-mode tabulated-list-mode "DICT Servers Menu"
-  "Display the string in `edictc-servers-menu-text' in all available fonts."
   (setq tabulated-list-format
         `[("Nick" 12 t)
           ("Server" 30 nil)
@@ -1088,11 +1066,6 @@ the current line."
   (tabulated-list-print))
 
 (defun edictc-list-servers ()
-  "Examine how a text is rendered in all available font families.
-Use `edictc-servers-menu-set-text' to change the sample text.  Use
-`edictc-servers-menu-set-script' to change the script.  Use
-`edictc-servers-menu-set-frame-font' to change the frame font to the font in
-the current line."
   (interactive)
   (let ((buf (get-buffer-create "*EDICTC Servers Menu*")))
     (with-current-buffer buf
@@ -1115,7 +1088,6 @@ the current line."
    entries))
 
 (defun edictc-servers-menu--refresh ()
-  "Re-populate `tabulated-list-entries'."
   (setq tabulated-list-entries
 	(edictc-highlight-entry-with-id
 	 (mapcar
@@ -1203,7 +1175,6 @@ the current line."
   "Local keymap for `edictc-server-matches-menu-mode' buffers.")
 
 (define-derived-mode edictc-server-matches-menu-mode tabulated-list-mode "DICT Servers Menu"
-  "Display the string in `edictc-server-matches-menu-text' in all available fonts."
   (setq tabulated-list-format
         `[("Match" 50 t)])
   (setq tabulated-list-padding 2)
@@ -1224,11 +1195,6 @@ the current line."
   )
 
 (defun edictc-list-server-matches (ep _command)
-  "Examine how a text is rendered in all available font families.
-Use `edictc-server-matches-menu-set-text' to change the sample text.  Use
-`edictc-server-matches-menu-set-script' to change the script.  Use
-`edictc-server-matches-menu-set-frame-font' to change the frame font to the font in
-the current line."
   (interactive)
   (let ((display-buffer (edictc-process-display-buffer ep)))
     (with-current-buffer display-buffer
@@ -1236,7 +1202,6 @@ the current line."
     (switch-to-buffer display-buffer)))
 
 (defun edictc-server-matches-menu--refresh ()
-  "Re-populate `tabulated-list-entries'."
   (let ()
     (assert edictc-cookie)
     (setq tabulated-list-entries
